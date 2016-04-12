@@ -1,10 +1,19 @@
 # bilibili-user
 Bilibili用户爬虫
 
+**该爬虫仅供学习使用**
+
 ## 文件介绍
 * `bilibili_user.py`：爬虫文件
 * `bilibili_user_info.sql`：数据库文件
 * `get_face.py`：用户头像下载器
+
+## Bilibili用户报告（Web App）
+
+演示地址：[http://ursb.me/bilibili-report](http://ursb.me/bilibili-report)
+GitHub：[https://github.com/airingursb/bilibili-report](https://github.com/airingursb/bilibili-report)
+
+**跪求Star Orz...**
 
 ## 用户数据初步分析
 
