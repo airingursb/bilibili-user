@@ -1,9 +1,15 @@
 # bilibili-user
+
 Bilibili用户爬虫
+
+知乎专栏地址：[https://zhuanlan.zhihu.com/p/24434456](https://zhuanlan.zhihu.com/p/24434456)
+
+本文所使用的数据可视化为 [infogr.am](infogr.am)
 
 **该爬虫仅供学习使用**
 
 ## 文件介绍
+
 * `bilibili_user.py`：爬虫文件
 * `bilibili_user_info.sql`：数据库文件
 * `get_face.py`：用户头像下载器
