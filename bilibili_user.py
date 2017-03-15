@@ -28,7 +28,7 @@ def LoadUserAgents(uafile):
                 uas.append(ua.strip()[1:-1-1])
     random.shuffle(uas)
     return uas
-uas = LoadUserAgents("/Users/heqingqiu/Desktop/playmyself/python/bilibili-user-master/user_agents.txt")
+uas = LoadUserAgents("user_agents.txt")
 head = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36',
     'X-Requested-With': 'XMLHttpRequest',
