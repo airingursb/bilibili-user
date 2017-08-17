@@ -10,11 +10,14 @@ import datetime
 import time
 from imp import reload
 
+
 def datetime_to_timestamp_in_milliseconds(d):
-    current_milli_time = lambda: int(round(time.time() * 1000))
+    def current_milli_time(): return int(round(time.time() * 1000))
     return current_milli_time()
 
+
 reload(sys)
+
 
 def LoadUserAgents(uafile):
     """
@@ -25,9 +28,11 @@ def LoadUserAgents(uafile):
     with open(uafile, 'rb') as uaf:
         for ua in uaf.readlines():
             if ua:
-                uas.append(ua.strip()[1:-1-1])
+                uas.append(ua.strip()[1:-1 - 1])
     random.shuffle(uas)
     return uas
+
+
 uas = LoadUserAgents("user_agents.txt")
 head = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36',
@@ -40,20 +45,20 @@ head = {
     'Accept': 'application/json, text/javascript, */*; q=0.01',
 }
 proxies = {
-'http':'http://140.240.81.16:8888',
-'http':'http://185.107.80.44:3128',
-'http':'http://203.198.193.3:808',
-'http':'http://125.88.74.122:85',
-'http':'http://125.88.74.122:84',
-'http':'http://125.88.74.122:82',
-'http':'http://125.88.74.122:83',
-'http':'http://125.88.74.122:81',
-'http':'http://123.57.184.70:8081'
+    'http': 'http://140.240.81.16:8888',
+    'http': 'http://185.107.80.44:3128',
+    'http': 'http://203.198.193.3:808',
+    'http': 'http://125.88.74.122:85',
+    'http': 'http://125.88.74.122:84',
+    'http': 'http://125.88.74.122:82',
+    'http': 'http://125.88.74.122:83',
+    'http': 'http://125.88.74.122:81',
+    'http': 'http://123.57.184.70:8081'
 }
 time1 = time.time()
-for m in range(1691,2000): #26 ,1000
+for m in range(1691, 2000):  # 26 ,1000
     urls = []
-    for i in range(m*100, (m+1)*100):
+    for i in range(m * 100, (m + 1) * 100):
         url = 'http://space.bilibili.com/ajax/member/GetInfo?mid=' + str(i)
         urls.append(url)
 
@@ -63,16 +68,18 @@ for m in range(1691,2000): #26 ,1000
             'mid': url.replace('http://space.bilibili.com/ajax/member/GetInfo?mid=', '')
         }
         ua = random.choice(uas)
-        head = {'User-Agent':ua,
-            'Referer':'http://space.bilibili.com/'+str(random.randint(9000,10000))+'/'
-        }
-        
-        jscontent = requests.session().post('http://space.bilibili.com/ajax/member/GetInfo', headers=head,  data=payload,proxies = proxies).text
+        head = {'User-Agent': ua,
+                'Referer': 'http://space.bilibili.com/' + str(random.randint(9000, 10000)) + '/'
+                }
+
+        jscontent = requests.session().post('http://space.bilibili.com/ajax/member/GetInfo',
+                                            headers=head,  data=payload, proxies=proxies).text
         time2 = time.time()
         try:
             jsDict = json.loads(jscontent)
             print(jsDict)
-            statusJson = jsDict['status'] if 'status' in jsDict.keys() else False
+            statusJson = jsDict['status'] if 'status' in jsDict.keys(
+            ) else False
             if statusJson == True:
                 if 'data' in jsDict.keys():
                     jsData = jsDict['data']
@@ -81,33 +88,38 @@ for m in range(1691,2000): #26 ,1000
                     sex = jsData['sex']
                     face = jsData['face']
                     coins = jsData['coins']
-                    regtime = jsData['regtime'] if 'regtime' in jsData.keys() else 0
                     spacesta = jsData['spacesta']
-                    birthday = jsData['birthday'] if 'birthday' in jsData.keys() else 'nobirthday'
-                    place = jsData['place'] if 'place' in jsData.keys() else 'noplace'
+                    birthday = jsData['birthday'] if 'birthday' in jsData.keys(
+                    ) else 'nobirthday'
+                    place = jsData['place'] if 'place' in jsData.keys(
+                    ) else 'noplace'
                     description = jsData['description']
                     article = jsData['article']
-                    fans = jsData['fans']
-                    friend = jsData['friend']
-                    attention = jsData['attention']
+                    playnum = jsData['playNum']
                     sign = jsData['sign']
-                    attentions = jsData['attentions']
                     level = jsData['level_info']['current_level']
                     exp = jsData['level_info']['current_exp']
-
-                    regtime_format = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(regtime))
-                    print(regtime_format)
                     print("Succeed: " + mid + "\t" + str(time2 - time1))
+                    try:
+                        res = requests.get(
+                            'http://api.bilibili.com/x/relation/stat?vmid=' + str(mid) + '&jsonp=jsonp').text
+                        js_fans_data = json.loads(res)
+                        following = js_fans_data['data']['following']
+                        fans = js_fans_data['data']['follower']
+                    except:
+                        following = 0
+                        fans = 0
                 else:
                     print('no data now')
                 try:
-                    conn = pymysql.connect(host='localhost', user='root', passwd='1565', charset='utf8')
+                    conn = pymysql.connect(
+                        host='localhost', user='root', passwd='213155', charset='utf8')
                     cur = conn.cursor()
                     # cur.execute('create database if not exists python')
                     conn.select_db('bilibili')
-                    cur.execute('INSERT INTO bilibili_user_info VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
-                                [mid, mid, name, sex, face, coins, regtime_format, spacesta, birthday, place, description,
-                                 article, fans, friend, attention, sign, str(attentions), level, exp])
+                    cur.execute('INSERT INTO bilibili_user_info VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
+                                [mid, mid, name, sex, face, coins, spacesta, birthday, place, description,
+                                 article, following, fans, playnum, sign, level, exp])
                 except Exception:
                     print("Mysql Error")
             else:
