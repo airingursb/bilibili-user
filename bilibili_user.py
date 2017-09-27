@@ -56,9 +56,9 @@ proxies = {
     'http': 'http://45.76.91.218:3128'
 }
 time1 = time.time()
-for m in range(112, 5215):  # 26 ,1000
+for m in xrange(99, 101):  # 26 ,1000
     urls = []
-    for i in range(m * 100, (m + 1) * 100):
+    for i in xrange(m * 100, (m + 1) * 100):
         url = 'https://space.bilibili.com/' + str(i)
         urls.append(url)
 
@@ -72,7 +72,6 @@ for m in range(112, 5215):  # 26 ,1000
                 'Referer': 'https://space.bilibili.com/' + str(i) + '?from=search&seid=' + str(random.randint(10000, 50000))
                 }
         jscontent = requests.session().post('http://space.bilibili.com/ajax/member/GetInfo',headers=head, data=payload, proxies=proxies).text
-        print jscontent
         time2 = time.time()
         try:
             jsDict = json.loads(jscontent)
@@ -113,8 +112,6 @@ for m in range(112, 5215):  # 26 ,1000
                 try:
                     conn = pymysql.connect(
                         host='localhost', user='root', passwd='123456', db='bilibili', charset='utf8')
-                    # cur.execute('create database if not exists python')
-                    #conn.select_db('bilibili')
                     cur = conn.cursor()
                     cur.execute('INSERT INTO bilibili_user_info(mid, name, sex, face, coins, spacesta, \
                     birthday, place, description,article, following, fans, playnum, sign, level, exp) \
