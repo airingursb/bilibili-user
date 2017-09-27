@@ -10,7 +10,6 @@ import datetime
 import time
 from imp import reload
 
-
 def datetime_to_timestamp_in_milliseconds(d):
     def current_milli_time(): return int(round(time.time() * 1000))
     return current_milli_time()
@@ -45,35 +44,35 @@ head = {
     'Accept': 'application/json, text/javascript, */*; q=0.01',
 }
 proxies = {
-    'http': 'http://140.240.81.16:8888',
-    'http': 'http://185.107.80.44:3128',
-    'http': 'http://203.198.193.3:808',
-    'http': 'http://125.88.74.122:85',
-    'http': 'http://125.88.74.122:84',
-    'http': 'http://125.88.74.122:82',
-    'http': 'http://125.88.74.122:83',
-    'http': 'http://125.88.74.122:81',
-    'http': 'http://123.57.184.70:8081'
+    'http': 'http://124.232.148.7:3128',
+    'http': 'http://119.23.161.182:3128',
+    'http': 'http://45.126.122.117:80',
+    'http': 'http://111.56.5.42:80',
+    'http': 'http://58.17.116.115:53281',
+    'http': 'http://47.91.237.123:8080',
+    'http': 'http://111.56.5.41:80',
+    'http': 'http://139.129.166.68:3128',
+    'http': 'http://118.178.124.33:3128',
+    'http': 'http://45.76.91.218:3128'
 }
 time1 = time.time()
-for m in range(1691, 2000):  # 26 ,1000
+for m in range(112, 5215):  # 26 ,1000
     urls = []
     for i in range(m * 100, (m + 1) * 100):
-        url = 'http://space.bilibili.com/ajax/member/GetInfo?mid=' + str(i)
+        url = 'https://space.bilibili.com/' + str(i)
         urls.append(url)
 
     def getsource(url):
         payload = {
-            '_': datetime_to_timestamp_in_milliseconds(datetime.datetime.now()),
-            'mid': url.replace('http://space.bilibili.com/ajax/member/GetInfo?mid=', '')
-        }
+             '_': datetime_to_timestamp_in_milliseconds(datetime.datetime.now()),
+             'mid': url.replace('https://space.bilibili.com/', '')
+         }
         ua = random.choice(uas)
         head = {'User-Agent': ua,
-                'Referer': 'http://space.bilibili.com/' + str(random.randint(9000, 10000)) + '/'
+                'Referer': 'https://space.bilibili.com/' + str(i) + '?from=search&seid=' + str(random.randint(10000, 50000))
                 }
-
-        jscontent = requests.session().post('http://space.bilibili.com/ajax/member/GetInfo',
-                                            headers=head,  data=payload, proxies=proxies).text
+        jscontent = requests.session().post('http://space.bilibili.com/ajax/member/GetInfo',headers=head, data=payload, proxies=proxies).text
+        print jscontent
         time2 = time.time()
         try:
             jsDict = json.loads(jscontent)
@@ -102,7 +101,7 @@ for m in range(1691, 2000):  # 26 ,1000
                     print("Succeed: " + mid + "\t" + str(time2 - time1))
                     try:
                         res = requests.get(
-                            'http://api.bilibili.com/x/relation/stat?vmid=' + str(mid) + '&jsonp=jsonp').text
+                            'https://api.bilibili.com/x/space/navnum?mid=' + str(mid) + '&jsonp=jsonp').text
                         js_fans_data = json.loads(res)
                         following = js_fans_data['data']['following']
                         fans = js_fans_data['data']['follower']
@@ -113,19 +112,21 @@ for m in range(1691, 2000):  # 26 ,1000
                     print('no data now')
                 try:
                     conn = pymysql.connect(
-                        host='localhost', user='root', passwd='213155', charset='utf8')
-                    cur = conn.cursor()
+                        host='localhost', user='root', passwd='123456', db='bilibili', charset='utf8')
                     # cur.execute('create database if not exists python')
-                    conn.select_db('bilibili')
-                    cur.execute('INSERT INTO bilibili_user_info VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
-                                [mid, mid, name, sex, face, coins, spacesta, birthday, place, description,
-                                 article, following, fans, playnum, sign, level, exp])
-                except Exception:
-                    print("Mysql Error")
+                    #conn.select_db('bilibili')
+                    cur = conn.cursor()
+                    cur.execute('INSERT INTO bilibili_user_info(mid, name, sex, face, coins, spacesta, \
+                    birthday, place, description,article, following, fans, playnum, sign, level, exp) \
+                    VALUES ("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s")' \
+                    % (mid, name, sex, face, coins, spacesta, birthday, place, description,article, following, fans, playnum, sign, level, exp))
+                    conn.commit()
+                except Exception,e:
+                    print "MySQL Error：", e
             else:
                 print("Error: " + url)
         except ValueError:
-            print('decoding json has failed')
+            pass
 
     pool = ThreadPool(1)
     try:
@@ -134,11 +135,11 @@ for m in range(1691, 2000):  # 26 ,1000
         print('ConnectionError')
         pool.close()
         pool.join()
-        time.sleep(10)
+        time.sleep(11)
         pool = ThreadPool(1)
         results = pool.map(getsource, urls)
 
-    time.sleep(5)
+    time.sleep(30)
 
 pool.close()
 pool.join()
