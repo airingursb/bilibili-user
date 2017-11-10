@@ -4,20 +4,18 @@ import requests
 import json
 import random
 import pymysql
-from multiprocessing.dummy import Pool as ThreadPool
 import sys
 import datetime
 import time
 from imp import reload
+from multiprocessing.dummy import Pool as ThreadPool
 
 
 def datetime_to_timestamp_in_milliseconds(d):
     def current_milli_time(): return int(round(time.time() * 1000))
     return current_milli_time()
 
-
 reload(sys)
-
 
 def LoadUserAgents(uafile):
     """
@@ -32,7 +30,6 @@ def LoadUserAgents(uafile):
     random.shuffle(uas)
     return uas
 
-
 uas = LoadUserAgents("user_agents.txt")
 head = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/52.0.2743.116 Safari/537.36',
@@ -44,40 +41,39 @@ head = {
     'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4',
     'Accept': 'application/json, text/javascript, */*; q=0.01',
 }
-proxies = {
-    'http': 'http://140.240.81.16:8888',
-    'http': 'http://185.107.80.44:3128',
-    'http': 'http://203.198.193.3:808',
-    'http': 'http://125.88.74.122:85',
-    'http': 'http://125.88.74.122:84',
-    'http': 'http://125.88.74.122:82',
-    'http': 'http://125.88.74.122:83',
-    'http': 'http://125.88.74.122:81',
-    'http': 'http://123.57.184.70:8081'
+proxies = { 'http': 'http://61.155.164.108:3128',
+            'http': 'http://116.199.115.79:80',
+            'http': 'http://42.245.252.35:80',
+            'http': 'http://106.14.51.145:8118',
+            'http': 'http://116.199.115.78:80',
+            'http': 'http://123.147.165.143:8080',
+            'http': 'http://58.62.86.216:9999',
+            'http': 'http://202.201.3.121:3128',
+            'http': 'http://119.29.201.134:808',
+            'http': 'http://61.155.164.112:3128',
+            'http': 'http://123.57.76.102:80',
+            'http': 'http://116.199.115.78:80',
 }
 time1 = time.time()
-for m in range(1691, 2000):  # 26 ,1000
+for m in xrange(99, 101):  # 26 ,1000
     urls = []
-    for i in range(m * 100, (m + 1) * 100):
-        url = 'http://space.bilibili.com/ajax/member/GetInfo?mid=' + str(i)
+    for i in xrange(m * 100, (m + 1) * 100):
+        url = 'https://space.bilibili.com/' + str(i)
         urls.append(url)
 
     def getsource(url):
         payload = {
-            '_': datetime_to_timestamp_in_milliseconds(datetime.datetime.now()),
-            'mid': url.replace('http://space.bilibili.com/ajax/member/GetInfo?mid=', '')
-        }
+             '_': datetime_to_timestamp_in_milliseconds(datetime.datetime.now()),
+             'mid': url.replace('https://space.bilibili.com/', '')
+         }
         ua = random.choice(uas)
         head = {'User-Agent': ua,
-                'Referer': 'http://space.bilibili.com/' + str(random.randint(9000, 10000)) + '/'
+                'Referer': 'https://space.bilibili.com/' + str(i) + '?from=search&seid=' + str(random.randint(10000, 50000))
                 }
-
-        jscontent = requests.session().post('http://space.bilibili.com/ajax/member/GetInfo',
-                                            headers=head,  data=payload, proxies=proxies).text
+        jscontent = requests.session().post('http://space.bilibili.com/ajax/member/GetInfo',headers=head, data=payload, proxies=proxies).text
         time2 = time.time()
         try:
             jsDict = json.loads(jscontent)
-            print(jsDict)
             statusJson = jsDict['status'] if 'status' in jsDict.keys(
             ) else False
             if statusJson == True:
@@ -102,7 +98,7 @@ for m in range(1691, 2000):  # 26 ,1000
                     print("Succeed: " + mid + "\t" + str(time2 - time1))
                     try:
                         res = requests.get(
-                            'http://api.bilibili.com/x/relation/stat?vmid=' + str(mid) + '&jsonp=jsonp').text
+                            'https://api.bilibili.com/x/space/navnum?mid=' + str(mid) + '&jsonp=jsonp').text
                         js_fans_data = json.loads(res)
                         following = js_fans_data['data']['following']
                         fans = js_fans_data['data']['follower']
@@ -113,19 +109,19 @@ for m in range(1691, 2000):  # 26 ,1000
                     print('no data now')
                 try:
                     conn = pymysql.connect(
-                        host='localhost', user='root', passwd='213155', charset='utf8')
+                        host='localhost', user='root', passwd='123456', db='bilibili', charset='utf8')
                     cur = conn.cursor()
-                    # cur.execute('create database if not exists python')
-                    conn.select_db('bilibili')
-                    cur.execute('INSERT INTO bilibili_user_info VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)',
-                                [mid, mid, name, sex, face, coins, spacesta, birthday, place, description,
-                                 article, following, fans, playnum, sign, level, exp])
-                except Exception:
-                    print("Mysql Error")
+                    cur.execute('INSERT INTO bilibili_user_info(mid, name, sex, face, coins, spacesta, \
+                    birthday, place, description,article, following, fans, playnum, sign, level, exp) \
+                    VALUES ("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s")' \
+                    % (mid, name, sex, face, coins, spacesta, birthday, place, description,article, following, fans, playnum, sign, level, exp))
+                    conn.commit()
+                except Exception,e:
+                    print "MySQL Error：", e
             else:
                 print("Error: " + url)
         except ValueError:
-            print('decoding json has failed')
+            pass
 
     pool = ThreadPool(1)
     try:
@@ -134,11 +130,11 @@ for m in range(1691, 2000):  # 26 ,1000
         print('ConnectionError')
         pool.close()
         pool.join()
-        time.sleep(10)
+        time.sleep(11)
         pool = ThreadPool(1)
         results = pool.map(getsource, urls)
 
-    time.sleep(5)
+    time.sleep(30)
 
 pool.close()
 pool.join()
