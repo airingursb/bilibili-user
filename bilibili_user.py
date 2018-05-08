@@ -10,9 +10,9 @@ import time
 from imp import reload
 from multiprocessing.dummy import Pool as ThreadPool
 
-
 def datetime_to_timestamp_in_milliseconds(d):
     def current_milli_time(): return int(round(time.time() * 1000))
+
     return current_milli_time()
 
 reload(sys)
@@ -41,21 +41,23 @@ head = {
     'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4',
     'Accept': 'application/json, text/javascript, */*; q=0.01',
 }
-proxies = { 'http': 'http://61.155.164.108:3128',
-            'http': 'http://116.199.115.79:80',
-            'http': 'http://42.245.252.35:80',
-            'http': 'http://106.14.51.145:8118',
-            'http': 'http://116.199.115.78:80',
-            'http': 'http://123.147.165.143:8080',
-            'http': 'http://58.62.86.216:9999',
-            'http': 'http://202.201.3.121:3128',
-            'http': 'http://119.29.201.134:808',
-            'http': 'http://61.155.164.112:3128',
-            'http': 'http://123.57.76.102:80',
-            'http': 'http://116.199.115.78:80',
+proxies = {
+    'http': 'http://61.155.164.108:3128',
+    'http': 'http://116.199.115.79:80',
+    'http': 'http://42.245.252.35:80',
+    'http': 'http://106.14.51.145:8118',
+    'http': 'http://116.199.115.78:80',
+    'http': 'http://123.147.165.143:8080',
+    'http': 'http://58.62.86.216:9999',
+    'http': 'http://202.201.3.121:3128',
+    'http': 'http://119.29.201.134:808',
+    'http': 'http://61.155.164.112:3128',
+    'http': 'http://123.57.76.102:80',
+    'http': 'http://116.199.115.78:80',
 }
 time1 = time.time()
-for m in range(99, 101):  # 26 ,1000
+
+for m in range(100, 101):  # 26 ,1000
     urls = []
     for i in range(m * 100, (m + 1) * 100):
         url = 'https://space.bilibili.com/' + str(i)
@@ -63,42 +65,44 @@ for m in range(99, 101):  # 26 ,1000
 
     def getsource(url):
         payload = {
-             '_': datetime_to_timestamp_in_milliseconds(datetime.datetime.now()),
-             'mid': url.replace('https://space.bilibili.com/', '')
-         }
+            '_': datetime_to_timestamp_in_milliseconds(datetime.datetime.now()),
+            'mid': url.replace('https://space.bilibili.com/', '')
+        }
         ua = random.choice(uas)
-        head = {'User-Agent': ua,
-                'Referer': 'https://space.bilibili.com/' + str(i) + '?from=search&seid=' + str(random.randint(10000, 50000))
-                }
-        jscontent = requests.session().post('http://space.bilibili.com/ajax/member/GetInfo',headers=head, data=payload, proxies=proxies).text
+        head = {
+            'User-Agent': ua,
+            'Referer': 'https://space.bilibili.com/' + str(i)
+        }
+        jscontent = requests \
+            .session() \
+            .post('http://space.bilibili.com/ajax/member/GetInfo',
+                  headers=head,
+                  data=payload
+                  ) \
+            .text
         time2 = time.time()
         try:
             jsDict = json.loads(jscontent)
-            statusJson = jsDict['status'] if 'status' in jsDict.keys(
-            ) else False
+            statusJson = jsDict['status'] if 'status' in jsDict.keys() else False
             if statusJson == True:
                 if 'data' in jsDict.keys():
                     jsData = jsDict['data']
                     mid = jsData['mid']
                     name = jsData['name']
                     sex = jsData['sex']
+                    rank = jsData['rank']
                     face = jsData['face']
-                    coins = jsData['coins']
+                    regtime = jsData['regtime']
                     spacesta = jsData['spacesta']
-                    birthday = jsData['birthday'] if 'birthday' in jsData.keys(
-                    ) else 'nobirthday'
-                    place = jsData['place'] if 'place' in jsData.keys(
-                    ) else 'noplace'
-                    description = jsData['description']
-                    article = jsData['article']
-                    playnum = jsData['playNum']
+                    birthday = jsData['birthday'] if 'birthday' in jsData.keys() else 'nobirthday'
                     sign = jsData['sign']
                     level = jsData['level_info']['current_level']
-                    exp = jsData['level_info']['current_exp']
-                    print("Succeed: " + mid + "\t" + str(time2 - time1))
+                    toutu = jsData['toutu']
+                    toutuId = jsData['toutuId']
+                    coins = jsData['coins']
                     try:
                         res = requests.get(
-                            'https://api.bilibili.com/x/space/navnum?mid=' + str(mid) + '&jsonp=jsonp').text
+                            'https://api.bilibili.com/x/relation/stat?vmid=' + str(mid) + '&jsonp=jsonp').text
                         js_fans_data = json.loads(res)
                         following = js_fans_data['data']['following']
                         fans = js_fans_data['data']['follower']
@@ -111,13 +115,17 @@ for m in range(99, 101):  # 26 ,1000
                     conn = pymysql.connect(
                         host='localhost', user='root', passwd='123456', db='bilibili', charset='utf8')
                     cur = conn.cursor()
-                    cur.execute('INSERT INTO bilibili_user_info(mid, name, sex, face, coins, spacesta, \
-                    birthday, place, description,article, following, fans, playnum, sign, level, exp) \
-                    VALUES ("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s")' \
-                    % (mid, name, sex, face, coins, spacesta, birthday, place, description,article, following, fans, playnum, sign, level, exp))
+                    cur.execute('INSERT INTO bilibili_user_info(mid, name, sex, rank, face, regtime, spacesta, \
+                    birthday, sign, level, toutu, toutuId, coins, following, fans) \
+                    VALUES ("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s")'
+                                % (
+                                    mid, name, sex, rank, face, 
+                                    regtime, spacesta, birthday, sign, level, 
+                                    toutu, toutuId, coins, following, fans
+                                ))
                     conn.commit()
-                except Exception,e:
-                    print "MySQL Error：", e
+                except Exception as e:
+                    print(e)
             else:
                 print("Error: " + url)
         except ValueError:
@@ -126,8 +134,7 @@ for m in range(99, 101):  # 26 ,1000
     pool = ThreadPool(1)
     try:
         results = pool.map(getsource, urls)
-    except Exception:
-        print('ConnectionError')
+    except Exception as e:
         pool.close()
         pool.join()
         time.sleep(11)
