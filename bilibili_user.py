@@ -63,8 +63,8 @@ for m in range(5214, 5215):
             .session() \
             .post('http://space.bilibili.com/ajax/member/GetInfo',
                   headers=head,
-                  data=payload
-                  ) \
+                  data=payload,
+                  proxies=proxies) \
             .text
         time2 = time.time()
         try:
