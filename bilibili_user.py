@@ -12,16 +12,11 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 def datetime_to_timestamp_in_milliseconds(d):
     def current_milli_time(): return int(round(time.time() * 1000))
-
     return current_milli_time()
 
 reload(sys)
 
 def LoadUserAgents(uafile):
-    """
-    uafile : string
-        path to text file of user agents, one per line
-    """
     uas = []
     with open(uafile, 'rb') as uaf:
         for ua in uaf.readlines():
@@ -42,22 +37,13 @@ head = {
     'Accept': 'application/json, text/javascript, */*; q=0.01',
 }
 proxies = {
-    'http': 'http://61.155.164.108:3128',
-    'http': 'http://116.199.115.79:80',
-    'http': 'http://42.245.252.35:80',
-    'http': 'http://106.14.51.145:8118',
-    'http': 'http://116.199.115.78:80',
-    'http': 'http://123.147.165.143:8080',
-    'http': 'http://58.62.86.216:9999',
-    'http': 'http://202.201.3.121:3128',
-    'http': 'http://119.29.201.134:808',
-    'http': 'http://61.155.164.112:3128',
-    'http': 'http://123.57.76.102:80',
-    'http': 'http://116.199.115.78:80',
+    'http': 'http://120.26.110.59:8080',
+    'http': 'http://120.52.32.46:80',
+    'http': 'http://218.85.133.62:80',
 }
 time1 = time.time()
 
-for m in range(100, 101):  # 26 ,1000
+for m in range(5214, 5215):
     urls = []
     for i in range(m * 100, (m + 1) * 100):
         url = 'https://space.bilibili.com/' + str(i)
@@ -71,7 +57,7 @@ for m in range(100, 101):  # 26 ,1000
         ua = random.choice(uas)
         head = {
             'User-Agent': ua,
-            'Referer': 'https://space.bilibili.com/' + str(i)
+            'Referer': 'https://space.bilibili.com/' + str(i) + '?from=search&seid=' + str(random.randint(10000, 50000))
         }
         jscontent = requests \
             .session() \
@@ -92,23 +78,37 @@ for m in range(100, 101):  # 26 ,1000
                     sex = jsData['sex']
                     rank = jsData['rank']
                     face = jsData['face']
-                    regtime = jsData['regtime']
+                    regtimestamp = jsData['regtime']
+                    regtime_local = time.localtime(regtimestamp)
+                    regtime = time.strftime("%Y-%m-%d %H:%M:%S",regtime_local)
                     spacesta = jsData['spacesta']
                     birthday = jsData['birthday'] if 'birthday' in jsData.keys() else 'nobirthday'
                     sign = jsData['sign']
                     level = jsData['level_info']['current_level']
+                    OfficialVerifyType = jsData['official_verify']['type']
+                    OfficialVerifyDesc = jsData['official_verify']['desc']
+                    vipType = jsData['vip']['vipType']
+                    vipStatus = jsData['vip']['vipStatus']
                     toutu = jsData['toutu']
                     toutuId = jsData['toutuId']
                     coins = jsData['coins']
+                    print("Succeed get user info: " + str(mid) + "\t" + str(time2 - time1))
                     try:
                         res = requests.get(
                             'https://api.bilibili.com/x/relation/stat?vmid=' + str(mid) + '&jsonp=jsonp').text
+                        viewinfo = requests.get(
+                            'https://api.bilibili.com/x/space/upstat?mid=' + str(mid) + '&jsonp=jsonp').text
                         js_fans_data = json.loads(res)
+                        js_viewdata = json.loads(viewinfo)
                         following = js_fans_data['data']['following']
                         fans = js_fans_data['data']['follower']
+                        archiveview = js_viewdata['data']['archive']['view']
+                        article = js_viewdata['data']['article']['view']
                     except:
                         following = 0
                         fans = 0
+                        archiveview = 0
+                        article = 0
                 else:
                     print('no data now')
                 try:
@@ -116,32 +116,29 @@ for m in range(100, 101):  # 26 ,1000
                         host='localhost', user='root', passwd='123456', db='bilibili', charset='utf8')
                     cur = conn.cursor()
                     cur.execute('INSERT INTO bilibili_user_info(mid, name, sex, rank, face, regtime, spacesta, \
-                    birthday, sign, level, toutu, toutuId, coins, following, fans) \
-                    VALUES ("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s","%s")'
-                                % (
-                                    mid, name, sex, rank, face, 
-                                    regtime, spacesta, birthday, sign, level, 
-                                    toutu, toutuId, coins, following, fans
-                                ))
+                                birthday, sign, level, OfficialVerifyType, OfficialVerifyDesc, vipType, vipStatus, \
+                                toutu, toutuId, coins, following, fans ,archiveview, article) \
+                    VALUES ("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s",\
+                            "%s","%s","%s","%s","%s", "%s","%s","%s","%s","%s","%s")'
+                                %
+                                (mid, name, sex, rank, face, regtime, spacesta, \
+                                birthday, sign, level, OfficialVerifyType, OfficialVerifyDesc, vipType, vipStatus, \
+                                toutu, toutuId, coins, following, fans ,archiveview, article))
                     conn.commit()
                 except Exception as e:
                     print(e)
             else:
                 print("Error: " + url)
-        except ValueError:
+        except Exception as e:
+            print(e)
             pass
 
+if __name__ == "__main__":
     pool = ThreadPool(1)
     try:
         results = pool.map(getsource, urls)
     except Exception as e:
-        pool.close()
-        pool.join()
-        time.sleep(11)
-        pool = ThreadPool(1)
-        results = pool.map(getsource, urls)
-
-    time.sleep(30)
-
-pool.close()
-pool.join()
+        print(e)
+ 
+    pool.close()
+    pool.join()
