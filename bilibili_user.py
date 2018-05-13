@@ -12,9 +12,12 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 def datetime_to_timestamp_in_milliseconds(d):
     def current_milli_time(): return int(round(time.time() * 1000))
+
     return current_milli_time()
 
+
 reload(sys)
+
 
 def LoadUserAgents(uafile):
     uas = []
@@ -24,6 +27,7 @@ def LoadUserAgents(uafile):
                 uas.append(ua.strip()[1:-1 - 1])
     random.shuffle(uas)
     return uas
+
 
 uas = LoadUserAgents("user_agents.txt")
 head = {
@@ -48,6 +52,7 @@ for m in range(5214, 5215):
     for i in range(m * 100, (m + 1) * 100):
         url = 'https://space.bilibili.com/' + str(i)
         urls.append(url)
+
 
     def getsource(url):
         payload = {
