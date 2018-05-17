@@ -47,8 +47,10 @@ proxies = {
 }
 time1 = time.time()
 
+urls = []
+
 for m in range(5214, 5215):
-    urls = []
+
     for i in range(m * 100, (m + 1) * 100):
         url = 'https://space.bilibili.com/' + str(i)
         urls.append(url)
