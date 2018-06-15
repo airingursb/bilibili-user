@@ -40,6 +40,8 @@ head = {
     'Accept-Language': 'zh-CN,zh;q=0.8,en;q=0.6,ja;q=0.4',
     'Accept': 'application/json, text/javascript, */*; q=0.01',
 }
+
+# Please replace your own proxies.
 proxies = {
     'http': 'http://120.26.110.59:8080',
     'http': 'http://120.52.32.46:80',
@@ -49,6 +51,7 @@ time1 = time.time()
 
 urls = []
 
+# Please change the range data by yourself.
 for m in range(5214, 5215):
 
     for i in range(m * 100, (m + 1) * 100):
@@ -119,6 +122,7 @@ for m in range(5214, 5215):
                 else:
                     print('no data now')
                 try:
+                    # Please write your MySQL's information.
                     conn = pymysql.connect(
                         host='localhost', user='root', passwd='123456', db='bilibili', charset='utf8')
                     cur = conn.cursor()
