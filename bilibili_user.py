@@ -24,7 +24,7 @@ def LoadUserAgents(uafile):
     with open(uafile, 'rb') as uaf:
         for ua in uaf.readlines():
             if ua:
-                uas.append(ua.strip()[1:-1 - 1])
+                uas.append(ua.strip()[:-1])
     random.shuffle(uas)
     return uas
 
