@@ -12,10 +12,7 @@ from multiprocessing.dummy import Pool as ThreadPool
 
 def datetime_to_timestamp_in_milliseconds(d):
     def current_milli_time(): return int(round(time.time() * 1000))
-
     return current_milli_time()
-
-
 reload(sys)
 
 
@@ -51,6 +48,7 @@ time1 = time.time()
 
 urls = []
 
+
 # Please change the range data by yourself.
 for m in range(5214, 5215):
 
@@ -69,18 +67,22 @@ for m in range(5214, 5215):
             'User-Agent': ua,
             'Referer': 'https://space.bilibili.com/' + str(i) + '?from=search&seid=' + str(random.randint(10000, 50000))
         }
+        mid = payload['mid']
+
+        #使用post会报错 (2021/5/2)
         jscontent = requests \
-            .session() \
-            .post('http://space.bilibili.com/ajax/member/GetInfo',
-                  headers=head,
-                  data=payload,
-                  proxies=proxies) \
-            .text
+          .session() \
+          .get('https://api.bilibili.com/x/space/acc/info?mid=%s&jsonp=jsonp' % mid,
+                headers=head,
+                data=payload
+                ) \
+          .text
+
         time2 = time.time()
         try:
             jsDict = json.loads(jscontent)
-            statusJson = jsDict['status'] if 'status' in jsDict.keys() else False
-            if statusJson == True:
+            status_code = jsDict['code'] if 'code' in jsDict.keys() else False
+            if status_code == 0:
                 if 'data' in jsDict.keys():
                     jsData = jsDict['data']
                     mid = jsData['mid']
@@ -88,19 +90,17 @@ for m in range(5214, 5215):
                     sex = jsData['sex']
                     rank = jsData['rank']
                     face = jsData['face']
-                    regtimestamp = jsData['regtime']
+                    regtimestamp = jsData['jointime']
                     regtime_local = time.localtime(regtimestamp)
-                    regtime = time.strftime("%Y-%m-%d %H:%M:%S",regtime_local)
-                    spacesta = jsData['spacesta']
+                    regtime = time.strftime("%Y-%m-%d %H:%M:%S", regtime_local)
+
                     birthday = jsData['birthday'] if 'birthday' in jsData.keys() else 'nobirthday'
                     sign = jsData['sign']
-                    level = jsData['level_info']['current_level']
-                    OfficialVerifyType = jsData['official_verify']['type']
-                    OfficialVerifyDesc = jsData['official_verify']['desc']
-                    vipType = jsData['vip']['vipType']
-                    vipStatus = jsData['vip']['vipStatus']
-                    toutu = jsData['toutu']
-                    toutuId = jsData['toutuId']
+                    level = jsData['level']
+                    OfficialVerifyType = jsData['official']['type']
+                    OfficialVerifyDesc = jsData['official']['desc']
+                    vipType = jsData['vip']['type']
+                    vipStatus = jsData['vip']['status']
                     coins = jsData['coins']
                     print("Succeed get user info: " + str(mid) + "\t" + str(time2 - time1))
                     try:
@@ -112,29 +112,27 @@ for m in range(5214, 5215):
                         js_viewdata = json.loads(viewinfo)
                         following = js_fans_data['data']['following']
                         fans = js_fans_data['data']['follower']
-                        archiveview = js_viewdata['data']['archive']['view']
-                        article = js_viewdata['data']['article']['view']
                     except:
                         following = 0
                         fans = 0
-                        archiveview = 0
-                        article = 0
+
                 else:
                     print('no data now')
                 try:
+                    print(jsDict)
                     # Please write your MySQL's information.
                     conn = pymysql.connect(
                         host='localhost', user='root', passwd='123456', db='bilibili', charset='utf8')
                     cur = conn.cursor()
-                    cur.execute('INSERT INTO bilibili_user_info(mid, name, sex, rank, face, regtime, spacesta, \
+                    cur.execute('INSERT INTO bilibili_user_info(mid, name, sex, rank, face, regtime, \
                                 birthday, sign, level, OfficialVerifyType, OfficialVerifyDesc, vipType, vipStatus, \
-                                toutu, toutuId, coins, following, fans ,archiveview, article) \
-                    VALUES ("%s","%s","%s","%s","%s","%s","%s","%s","%s","%s",\
-                            "%s","%s","%s","%s","%s", "%s","%s","%s","%s","%s","%s")'
+                                coins, following, fans) \
+                    VALUES ("%s","%s","%s","%s","%s","%s","%s","%s",\
+                            "%s","%s","%s","%s","%s", "%s","%s","%s")'
                                 %
-                                (mid, name, sex, rank, face, regtime, spacesta, \
-                                birthday, sign, level, OfficialVerifyType, OfficialVerifyDesc, vipType, vipStatus, \
-                                toutu, toutuId, coins, following, fans ,archiveview, article))
+                                (mid, name, sex, rank, face, regtime, \
+                                 birthday, sign, level, OfficialVerifyType, OfficialVerifyDesc, vipType, vipStatus, \
+                                 coins, following, fans))
                     conn.commit()
                 except Exception as e:
                     print(e)
